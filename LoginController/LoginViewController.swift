@@ -8,40 +8,57 @@
 
 import UIKit
 
-class LoginViewController: UIViewController {
+public protocol LoginViewControllerDelegate: class {
+    /**
+     Delegate method to call when signin is clicked
+     */
+    func signin(loginViewController: LoginViewController)
+    
+}
 
+open class LoginViewController: UIViewController, UITextFieldDelegate {
+
+    public weak var delegate: LoginViewControllerDelegate?
     var username: UITextField!
     var password: UITextField!
+    var signinButton: UIButton!
     var errText: UITextView!
     
     
-    override func viewDidLoad() {
+    override open func viewDidLoad() {
         super.viewDidLoad()
 
         // Do any additional setup after loading the view.
-        self.view.backgroundColor = UIColor.white
-        addLogo()
         addTextFields()
         addSigninButton()
-        
-    }
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
+        self.hideKeyboardWhenTappedAround()
         
     }
     
-    func addLogo() {
-        let imageView = UIImageView(frame: CGRect(x: 0, y: 0, width: 267, height: 73))
-        let image = UIImage(named: "qb_logo.png");
+    /**
+     Set the background color for the view
+     */
+    public var backgroundColor: UIColor = UIColor.white {
+        didSet {
+            self.view.backgroundColor = backgroundColor;
+        }
+    }
+    
+    /**
+     add the logo for your company/product on the login screen
+     */
+    public func addLogo(imgName: String, width: Int, height: Int) {
+        let imageView = UIImageView(frame: CGRect(x: 0, y: 0, width: width, height: height))
+        let image = UIImage(named: imgName);
         imageView.center = CGPoint(x: self.view.frame.width/2, y: self.view.frame.height/6)
         imageView.image = image;
         self.view.addSubview(imageView);
     }
     
-    
-    func addTextFields() {
+    /**
+     Add the username and password text fields on the screen
+     */
+    fileprivate func addTextFields() {
         username = UITextField(frame: CGRect(x: 50, y: (self.view.frame.height-200)/2 - 30, width: self.view.frame.width - 100, height: 48))
         username.borderStyle = .roundedRect
         username.placeholder = "Username"
@@ -62,23 +79,59 @@ class LoginViewController: UIViewController {
         
     }
     
-    func addSigninButton() {
-        var signinButton: UIButton!
+    /**
+     Add the signin button on screen at the bottom of the page
+     TODO: maybe show this as a button somewhere else on the screen or move the page up to show
+     the signin button just above the keyboard
+     */
+    fileprivate func addSigninButton() {
         signinButton = UIButton(type: .system)
         signinButton.frame = CGRect(x: 0, y: self.view.frame.height - 64, width: self.view.frame.width, height: 64)
         signinButton.setTitle("Sign In", for: .normal)
         signinButton.setTitleColor(.white, for: .normal)
-        signinButton.backgroundColor = UIColor.qb_dark()
+        signinButton.backgroundColor = UIColor.red.withAlphaComponent(0.5)
         signinButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 19)
         signinButton.layer.cornerRadius = 0
         signinButton.layer.masksToBounds = true
-        signinButton.addTarget(self, action: #selector(signin), for: .touchUpInside)
+        signinButton.addTarget(self, action: #selector(signin_clicked), for: .touchUpInside)
         self.view.addSubview(signinButton)
         
     }
     
-    open func setBackgroundColor(_ color: UIColor) {
-        self.view.backgroundColor = color;
+    /**
+     call the delegate method when the signin button is clicked
+     */
+    @objc fileprivate func signin_clicked() {
+        self.delegate?.signin(loginViewController: self)
     }
     
+    /**
+     Define the behavior when the return button is clicked when on username field or password field
+     */
+    public func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        if textField == username {
+            password.becomeFirstResponder()
+        }
+        else {
+            self.view.endEditing(true)
+            signin_clicked()
+        }
+        return false
+    }
+}
+
+/**
+ Extension to allow us to dismiss the keyboard when clicked somewhere else on the screen except the
+ text fields
+ */
+extension LoginViewController {
+    func hideKeyboardWhenTappedAround() {
+        let tap: UITapGestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(LoginViewController.dismissKeyboard))
+        tap.cancelsTouchesInView = false
+        view.addGestureRecognizer(tap)
+    }
+    
+    @objc func dismissKeyboard() {
+        view.endEditing(true)
+    }
 }

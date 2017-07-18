@@ -8,11 +8,24 @@
 
 import UIKit
 
-class ViewController: UIViewController {
+class ViewController: UIViewController, LoginViewControllerDelegate {
 
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+        
+    }
+    override func viewDidAppear(_ animated: Bool) {
+        let loginController = LoginViewController()
+        loginController.backgroundColor = UIColor.red
+        loginController.delegate = self
+        loginController.password = UITextField()
+        loginController.username.placeholder = "blah"
+        self.present(loginController, animated: true, completion: nil)
+    }
+    
+    func signin(loginViewController: LoginViewController) {
+        print ("delegate called successfully")
     }
 
     override func didReceiveMemoryWarning() {
